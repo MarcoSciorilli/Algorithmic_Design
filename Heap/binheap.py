@@ -62,7 +62,7 @@ class binheap(Generic[T]):
                 keep_fixing = False
     def remove_minimum(self) -> T:
         if self.is_empty():
-            raise RuntimeErro('The heap is empty')
+            raise RuntimeError('The heap is empty')
         self._swap_keys(0, self._size-1)
 
         # self._A[0] = self._A[self._size-1]
