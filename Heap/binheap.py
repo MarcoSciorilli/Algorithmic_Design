@@ -69,5 +69,7 @@ class binheap(Generic[T]):
 
         self._size = self._size - 1
 
+        self._heapify(0)
+
         return self._A[self._size]
 
