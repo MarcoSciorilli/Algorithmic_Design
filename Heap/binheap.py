@@ -93,6 +93,20 @@ class binheap(Generic[T]):
         for i in range(self._size - 1, -1, -1):
             self._heapify(i)
 
+    def decrease_key(self, node: int, new_value: T) -> None:
+        if self._torder(self._A[node], new_value):
+            raise RuntimeError(f'{new_value} is not smaller than' + f'{self._A[node]}')
+
+        self._A[node] = new_value
+
+        parent = binheap.parent(node)
+
+        while node != 0 and not self._torder(self._A[parent], self._A[node]):
+            self._swap_keys(node, parent)
+
+            node = parent
+            parent = binheap.parent(node)
+
     def __repr__(self) -> str:
         bh_str = ''
 
