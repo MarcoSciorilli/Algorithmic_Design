@@ -107,6 +107,23 @@ class binheap(Generic[T]):
             node = parent
             parent = binheap.parent(node)
 
+    def insert(self, value: T) -> None:
+        if self._size >= len(self._A):
+            raise RuntimeError('The heap is full')
+
+        if self.is_empty():
+            self._A[0] = value
+            self._size += 1
+        else:
+            parent = binheap.parent(self._size)
+            if self._torder(self._A[parent], value):
+                self._A[self._size] = value
+            else:
+                self._A[self._size] = self._A[parent]
+
+            self._size += 1
+            self.decrease_key(self._size-1, value)
+
     def __repr__(self) -> str:
         bh_str = ''
 
