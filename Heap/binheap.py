@@ -118,11 +118,11 @@ class binheap(Generic[T]):
             parent = binheap.parent(self._size)
             if self._torder(self._A[parent], value):
                 self._A[self._size] = value
+                self._size += 1
             else:
                 self._A[self._size] = self._A[parent]
-
-            self._size += 1
-            self.decrease_key(self._size-1, value)
+                self._size += 1
+                self.decrease_key(self._size-1, value)
 
     def __repr__(self) -> str:
         bh_str = ''
@@ -131,7 +131,7 @@ class binheap(Generic[T]):
         up_to = 2
 
         while next_node <= self._size:
-            level = '\t'.join(f'{v}' for v in self._A[next_node - 1: up_to - 1])
+            level = '\t'.join(f'{v}' for v in self._A[next_node - 1: min(up_to - 1, self._size)])
 
             if next_node == 1:
                 bh_str = level
