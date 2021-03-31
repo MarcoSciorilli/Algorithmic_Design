@@ -8,7 +8,7 @@ def di_search(A: List[T], value: T) -> Union[None, int]:
     r = len(A) - 1
 
     while r >= 1:
-        m = (l + r) / 2
+        m = (l + r) // 2
         if A[m] == value:
             return m
 
