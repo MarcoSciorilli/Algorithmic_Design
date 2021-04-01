@@ -2,6 +2,8 @@ from typing import TypeVar, List, Union, Optional, Callable
 from random import random
 from sys import stdout
 from timeit import timeit
+import sys
+sys.path.append('../')
 from Heap.binheap import binheap
 
 T = TypeVar('T')
