@@ -1,5 +1,5 @@
-from typing import TypeVar, Generic, List, Union
 from numbers import Number
+from typing import TypeVar, Generic, List, Union
 
 T = TypeVar('T')
 

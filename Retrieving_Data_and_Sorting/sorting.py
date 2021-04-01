@@ -2,6 +2,7 @@ from typing import TypeVar, List, Union, Optional, Callable
 from random import random
 from sys import stdout
 from timeit import timeit
+from Heap.binheap import binheap
 
 T = TypeVar('T')
 
@@ -88,14 +89,24 @@ def quicksort(A: List[T], begin: Optional[int] = 0, end: Optional[int] = None,
 
 def bubble_sort(A: List[T], begin: Optional[int] = 0, end: Optional[int] = None,
                 total_order: Optional[TOrderType] = min_order) -> None:
-
     if end is None:
         end = len(A) - 1
 
     for i in range(end, begin, -1):
         for j in range(begin, i):
-            if not total_order(A[j], A[j+1]):
-                A[j], A[j+1] = A[j+1], A[j]
+            if not total_order(A[j], A[j + 1]):
+                A[j], A[j + 1] = A[j + 1], A[j]
+
+
+def reversed_order(total_order: TOrderType) -> TOrderType:
+    return (lambda a, b: total_order(b, a))
+
+def heapsort(A: List[T], total_order: Optional[TOrderType] = min_order) -> None:
+
+    H = binheap(A, total_order=reversed_order(total_order))  # build a max heap
+
+    for i in range(len(A) - 1, 0, -1):
+        A[i] = H.remove_minimum  # extract the maximum from the heap
 
 
 def build_dataset(num_of_arrays: int, size: int) -> List[List[float]]:
@@ -113,8 +124,8 @@ def sort_dataset(dataset, alg):
 
 if __name__ == '__main__':
 
-    algorithms = ['insertion_sort', 'quicksort']
-    dateset_size = 10**4
+    algorithms = ['insertion_sort', 'quicksort', 'bubble_sort', 'heapsort']
+    dateset_size = 10 ** 4
     # Print the header
     stdout.write('Size')
     for alg in algorithms:
@@ -130,7 +141,7 @@ if __name__ == '__main__':
 
             T = timeit(f'sort_dataset(dateset_copy, {alg})', globals=locals(), number=1)
 
-            stdout.write(f'\t{T/dateset_size}')
+            stdout.write(f'\t{T / dateset_size}')
             stdout.flush()
 
         stdout.write('\n')
