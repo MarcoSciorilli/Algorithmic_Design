@@ -86,6 +86,18 @@ def quicksort(A: List[T], begin: Optional[int] = 0, end: Optional[int] = None,
         begin = pivot + 1
 
 
+def bubble_sort(A: List[T], begin: Optional[int] = 0, end: Optional[int] = None,
+                total_order: Optional[TOrderType] = min_order) -> None:
+
+    if end is None:
+        end = len(A) - 1
+
+    for i in range(end, begin, -1):
+        for j in range(begin, i):
+            if not total_order(A[j], A[j+1]):
+                A[j], A[j+1] = A[j+1], A[j]
+
+
 def build_dataset(num_of_arrays: int, size: int) -> List[List[float]]:
     dataset = [None] * num_of_arrays
     for i in range(num_of_arrays):
