@@ -1,7 +1,6 @@
 from __future__ import annotations
 from numbers import Number
-from typing import List
-from typing import Tuple
+from typing import List, Tuple
 
 
 def gauss_matrix_mult(A: Matrix, B: Matrix) -> Matrix:
@@ -33,20 +32,18 @@ def gauss_matrix_mult(A: Matrix, B: Matrix) -> Matrix:
         for col in range(B.num_of_cols):
             value = 0
             for k in range(A.num_of_cols):
-                value += A[row][k]*B[k][col]
+                value += A[row][k] * B[k][col]
             result[row][col] = value
 
     return Matrix(result, clone_matrix=False)
 
 
-
 def get_matrix_quadrant(A: Matrix) -> Tuple[Matrix, Matrix, Matrix, Matrix]:
-    A11 = A.submatrix(0, A.num_of_rows//2, 0, A.num_of_cols//2)
-    A12 = A.submatrix(0, A.num_of_rows//2, A.num_of_cols//2, A.num_of_cols//2)
-    A21 = A.submatrix(A.num_of_rows//2, A.num_of_rows//2, 0, A.num_of_cols//2)
-    A22 = A.submatrix(A.num_of_rows//2, A.num_of_rows//2,  A.num_of_cols//2, A.num_of_cols//2)
+    A11 = A.submatrix(0, A.num_of_rows // 2, 0, A.num_of_cols // 2)
+    A12 = A.submatrix(0, A.num_of_rows // 2, A.num_of_cols // 2, A.num_of_cols // 2)
+    A21 = A.submatrix(A.num_of_rows // 2, A.num_of_rows // 2, 0, A.num_of_cols // 2)
+    A22 = A.submatrix(A.num_of_rows // 2, A.num_of_rows // 2, A.num_of_cols // 2, A.num_of_cols // 2)
     return A11, A12, A21, A22
-
 
 
 def strassen_matrix_mult(A: Matrix, B: Matrix) -> Matrix:
@@ -69,7 +66,7 @@ def strassen_matrix_mult(A: Matrix, B: Matrix) -> Matrix:
     S9 = A11 - A21
     S10 = B11 + B12
 
-    #Recursive calls
+    # Recursive calls
     P1 = strassen_matrix_mult(A11, S1)
     P2 = strassen_matrix_mult(S2, B22)
     P3 = strassen_matrix_mult(S3, B11)
@@ -78,101 +75,103 @@ def strassen_matrix_mult(A: Matrix, B: Matrix) -> Matrix:
     P6 = strassen_matrix_mult(S7, S8)
     P7 = strassen_matrix_mult(S9, S10)
 
-    #Second batch of sums Theta(n^2)
-    C11 = P5 + P4 - P2 +P6
+    # Second batch of sums Theta(n^2)
+    C11 = P5 + P4 - P2 + P6
     C12 = P1 + P2
     C21 = P3 + P4
     C22 = P5 + P1 - P3 - P7
 
-    #Built the resulting matrix
-    result = Matrix([[0 for i in range(B.num_of_cols)] for y in range(A.num_of_rows)], clone_matrix = False)
+    # Built the resulting matrix
+    result = Matrix([[0 for i in range(B.num_of_cols)] for y in range(A.num_of_rows)], clone_matrix=False)
 
-    #copying Cij into the resulting matrix
+    # copying Cij into the resulting matrix
     result.assign_submatrix(0, 0, C11)
-    result.assign_submatrix(0, result.num_of_cols//2, C12)
-    result.assign_submatrix(result.num_of_rows//2, 0, C21)
-    result.assign_submatrix(result.num_of_rows//2, result.num_of_cols//2, C22)
+    result.assign_submatrix(0, result.num_of_cols // 2, C12)
+    result.assign_submatrix(result.num_of_rows // 2, 0, C21)
+    result.assign_submatrix(result.num_of_rows // 2, result.num_of_cols // 2, C22)
 
     return result
 
+
 def strassen_matrix_mult_memory_efficent(A: Matrix, B: Matrix) -> Matrix:
-	if max(A.num_of_rows, B.num_of_cols, A.num_of_cols) < 32:
-		return gauss_matrix_mult(A, B)
-		# Recursive step
-	A11, A12, A21, A22 = get_matrix_quadrant(A)
-	B11, B12, B21, B22 = get_matrix_quadrant(B)
+    if max(A.num_of_rows, B.num_of_cols, A.num_of_cols) < 32:
+        return gauss_matrix_mult(A, B)
+    # Recursive step
+    A11, A12, A21, A22 = get_matrix_quadrant(A)
+    B11, B12, B21, B22 = get_matrix_quadrant(B)
 
-	# First batch of sum Theta(n^2)
-	P1 = B12 - B22
+    # First batch of sum Theta(n^2)
+    P1 = B12 - B22
 
-	P1 = strassen_matrix_mult_memory_efficent(A11, P1)
+    P1 = strassen_matrix_mult_memory_efficent(A11, P1)
 
-	C12 = P1
+    C12 = P1
 
-	C22 = P1
+    C22 = P1
 
-	P1 = A11 + A12
+    P1 = A11 + A12
 
-	P1 = strassen_matrix_mult_memory_efficent(P1, B22)
+    P1 = strassen_matrix_mult_memory_efficent(P1, B22)
 
-	C12 = C12 + P1
+    C12 = C12 + P1
 
-	C11 = P1
+    C11 = P1
 
-	P1 = A21 + A22
+    P1 = A21 + A22
 
-	P1 = strassen_matrix_mult_memory_efficent(P1, B11)
+    P1 = strassen_matrix_mult_memory_efficent(P1, B11)
 
-	C22 = C22 - P1
+    C22 = C22 - P1
 
-	C21 = P1
+    C21 = P1
 
-	P1 =  B21 - B11
+    P1 = B21 - B11
 
-	P1 = strassen_matrix_mult_memory_efficent(A22, P1)
+    P1 = strassen_matrix_mult_memory_efficent(A22, P1)
 
-	C11 = P1 - C11
+    C11 = P1 - C11
 
-	C21 = C21 + P1
+    C21 = C21 + P1
 
-	P1 = A11 + A22
+    P1 = A11 + A22
 
-	S2 = B11 + B22
+    S2 = B11 + B22
 
-	P1 = strassen_matrix_mult_memory_efficent(P1, S2)
+    P1 = strassen_matrix_mult_memory_efficent(P1, S2)
 
-	C11 = C11 + P1
+    C11 = C11 + P1
 
-	C22 = C22 + P1
+    C22 = C22 + P1
 
-	P1 = A12 - A22
+    P1 = A12 - A22
 
-	S2 = B21 + B22
+    S2 = B21 + B22
 
-	P1 = strassen_matrix_mult_memory_efficent(P1, S2)
+    P1 = strassen_matrix_mult_memory_efficent(P1, S2)
 
-	C11 = C11 + P1
+    C11 = C11 + P1
 
-	P1 = A11 - A21
+    P1 = A11 - A21
 
-	S2 = B11 + B12
+    S2 = B11 + B12
 
-	P1 = strassen_matrix_mult_memory_efficent(P1, S2)
+    P1 = strassen_matrix_mult_memory_efficent(P1, S2)
 
-	C22 = C22 - P1
+    C22 = C22 - P1
 
-	#Built the resulting matrix
-	result = Matrix([[0 for i in range(B.num_of_cols)] for y in range(A.num_of_rows)], clone_matrix = False)
+    # Built the resulting matrix
+    result = Matrix([[0 for i in range(B.num_of_cols)] for y in range(A.num_of_rows)], clone_matrix=False)
 
-	#copying Cij into the resulting matrix
-	result.assign_submatrix(0, 0, C11)
-	result.assign_submatrix(0, result.num_of_cols//2, C12)
-	result.assign_submatrix(result.num_of_rows//2, 0, C21)
-	result.assign_submatrix(result.num_of_rows//2, result.num_of_cols//2, C22)
+    # copying Cij into the resulting matrix
+    result.assign_submatrix(0, 0, C11)
+    result.assign_submatrix(0, result.num_of_cols // 2, C12)
+    result.assign_submatrix(result.num_of_rows // 2, 0, C21)
+    result.assign_submatrix(result.num_of_rows // 2, result.num_of_cols // 2, C22)
 
-	return result
+    return result
+
+
 def strassen_matrix_mult_non_power(A: Matrix, B: Matrix) -> Matrix:
-
     if A.num_of_cols != B.num_of_rows:
         raise ValueError('The two matrices cannot be multiplied')
     A_squared_rows = find_nearest_power(A.num_of_rows)
@@ -185,8 +184,8 @@ def strassen_matrix_mult_non_power(A: Matrix, B: Matrix) -> Matrix:
     result = trim_square(result, A.num_of_rows, B.num_of_cols)
     return result
 
-def strassen_matrix_mult_non_power_memory(A: Matrix, B: Matrix) -> Matrix:
 
+def strassen_matrix_mult_non_power_memory(A: Matrix, B: Matrix) -> Matrix:
     if A.num_of_cols != B.num_of_rows:
         raise ValueError('The two matrices cannot be multiplied')
     A_squared_rows = find_nearest_power(A.num_of_rows)
@@ -200,23 +199,24 @@ def strassen_matrix_mult_non_power_memory(A: Matrix, B: Matrix) -> Matrix:
     return result
 
 
-def find_nearest_power(Dimension: Number) -> Number:
+def find_nearest_power(Dimension: int) -> int:
     result = 2
     while result < Dimension:
         result *= 2
     return result
 
-def square_matrix(A: Matrix, Dim: Number, Number: Number) -> Matrix:
+
+def square_matrix(A: Matrix, Dim: int, Number: int) -> Matrix:
     result = Matrix([[Number for i in range(Dim)] for y in range(Dim)])
     for row in range(A.num_of_rows):
         for col in range(A.num_of_cols):
             result[row][col] = A[row][col]
     return result
 
-def trim_square(A: Matrix, Rows: Number, Cols: Number) -> Matrix:
+
+def trim_square(A: Matrix, Rows: int, Cols: int) -> Matrix:
     result = Matrix([[A[y][i] for i in range(Cols)] for y in range(Rows)])
     return result
-
 
 
 class Matrix(object):
@@ -239,6 +239,7 @@ class Matrix(object):
     ValueError
         If there are two lists having a different number of values
     '''
+
     def __init__(self, A: List[List[Number]], clone_matrix: bool = True):
         num_of_cols = None
 
@@ -439,7 +440,7 @@ class Matrix(object):
         if not isinstance(value, Number):
             raise ValueError('{} is not a number'.format(value))
 
-        return Matrix([[value*elem for elem in row] for row in self._A],
+        return Matrix([[value * elem for elem in row] for row in self._A],
                       clone_matrix=False)
 
     def submatrix(self, from_row: int, num_of_rows: int,
@@ -462,8 +463,8 @@ class Matrix(object):
         Matrix
             A submatrix of this matrix
         '''
-        A = [row[from_col:from_col+num_of_cols]
-             for row in self._A[from_row:from_row+num_of_rows]]
+        A = [row[from_col:from_col + num_of_cols]
+             for row in self._A[from_row:from_row + num_of_rows]]
 
         return Matrix(A, clone_matrix=False)
 
@@ -485,15 +486,17 @@ class IdentityMatrix(Matrix):
     size: int
         The size of the identity matrix
     '''
+
     def __init__(self, size: int):
         A = [[1 if x == y else 0 for x in range(size)]
              for y in range(size)]
 
         super().__init__(A)
 
-if __name__=='__main__':
 
-    from random import random,seed
+if __name__ == '__main__':
+
+    from random import random, seed
     from sys import stdout
     from timeit import default_timer as timer
     from timeit import timeit
@@ -501,12 +504,12 @@ if __name__=='__main__':
     seed(0)
 
     for i in range(8):
-        size = 2**i
+        size = 2 ** i
         stdout.write(f'{size}')
-        A = Matrix([[random() for x in range(size)]for y in range(size)])
-        B = Matrix([[random() for x in range(size)]for y in range(size)])
+        A = Matrix([[random() for x in range(size)] for y in range(size)])
+        B = Matrix([[random() for x in range(size)] for y in range(size)])
 
-        for funct in ['gauss_matrix_mult', 'strassen_matrix_mult','strassen_matrix_mult_memory_efficent']:
+        for funct in ['gauss_matrix_mult', 'strassen_matrix_mult', 'strassen_matrix_mult_memory_efficent']:
             T = timeit(f'{funct}(A, B)', globals=locals(), number=1)
             stdout.write('\t{:.3f}'.format(T))
             stdout.flush()
@@ -517,21 +520,21 @@ if __name__=='__main__':
     size_list = []
     with open("Data2.txt", "w") as f:
         for i in range(14):
-            size = 2**i
-            #size_list.append(size)
-            A = Matrix([[random() for x in range(size)]for y in range(size)])
-            B = Matrix([[random() for x in range(size)]for y in range(size)])
+            size = 2 ** i
+            # size_list.append(size)
+            A = Matrix([[random() for x in range(size)] for y in range(size)])
+            B = Matrix([[random() for x in range(size)] for y in range(size)])
             start = timer()
-            gauss_matrix_mult(A,B)
+            gauss_matrix_mult(A, B)
             end = timer()
-            #time_gauss.append(end-start)
+            # time_gauss.append(end-start)
             start1 = timer()
-            strassen_matrix_mult_non_power(A,B)
+            strassen_matrix_mult_non_power(A, B)
             end1 = timer()
-            #time_strass.append(end1-start1)
+            # time_strass.append(end1-start1)
             start2 = timer()
-            strassen_matrix_mult_non_power_memory(A,B)
+            strassen_matrix_mult_non_power_memory(A, B)
             end2 = timer()
-            #time_memory.append(end-start)
-            print(size,end-start,end1-start1,end2-start2, file=f)
+            # time_memory.append(end-start)
+            print(size, end - start, end1 - start1, end2 - start2, file=f)
             print(size)

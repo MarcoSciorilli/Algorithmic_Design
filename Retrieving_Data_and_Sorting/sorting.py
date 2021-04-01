@@ -101,10 +101,24 @@ def sort_dataset(dataset, alg):
 
 if __name__ == '__main__':
 
+    algorithms = ['insertion_sort', 'quicksort']
+    dateset_size = 10**4
+    # Print the header
+    stdout.write('Size')
+    for alg in algorithms:
+        stdout.write(f'\t{alg}')
+
+    # for all size in [100, 200, ..., 1000]
     for size in range(100, 1100, 100):
-        dataset = build_dataset(100, size)
+        dataset = build_dataset(dateset_size, size)
 
-        T = timeit(f'sort_dataset(dataset, insertion_sort)', globals=locals(), number=1)
+        stdout.write(f'\n{size}')
+        for alg in algorithms:
+            dateset_copy = [[value for value in A] for A in dataset]
 
-        stdout.write(f'{size}\t{T}\n')
-        stdout.flush()
+            T = timeit(f'sort_dataset(dateset_copy, {alg})', globals=locals(), number=1)
+
+            stdout.write(f'\t{T/dateset_size}')
+            stdout.flush()
+
+        stdout.write('\n')
