@@ -101,14 +101,58 @@ def bubble_sort(A: List[T], begin: Optional[int] = 0, end: Optional[int] = None,
 
 
 def reversed_order(total_order: TOrderType) -> TOrderType:
-    return (lambda a, b: total_order(b, a))
+    return lambda a, b: total_order(b, a)
+
 
 def heapsort(A: List[T], total_order: Optional[TOrderType] = min_order) -> None:
-
     H = binheap(A, total_order=reversed_order(total_order))  # build a max heap
 
     for i in range(len(A) - 1, 0, -1):
         A[i] = H.remove_minimum  # extract the maximum from the heap
+
+
+def counting_sort(A: List[T]) -> List[T]:
+    # A[i] in [Min, Max]
+
+    # allocate and initialize C
+    C = [0] * (max(A) + 1)
+
+    # count the number of repetitions of each value in A
+    for value in A:
+        C[value] += 1
+
+    # evaluate the number of values in A <= j
+    for j in range(1, len(C)):
+        C[j] += C[j - 1]
+
+    # build the resulting array
+    B = [None] * len(A)
+
+    # reverse all the A's values in B
+    for value in reversed(A):
+        B[C[value] - 1] = value
+        C[value] -= 1
+
+    return B
+
+
+def bucket_sort(A: List[T]) -> List[T]:
+    # assuming uniform distribution in [0,1)
+    # for the values in A
+
+    buckets = [[] for i in range(len(A))]
+
+    for value in A:
+        buckets[int(value * len(A))].append(value)
+
+    for j in range(len(buckets)):
+        insertion_sort(buckets[j])
+
+    i = 0
+    for bucket in buckets:
+        for value in bucket:
+            A[i] = value
+            i += 1
 
 
 def build_dataset(num_of_arrays: int, size: int) -> List[List[float]]:
@@ -126,7 +170,7 @@ def sort_dataset(dataset, alg):
 
 if __name__ == '__main__':
 
-    algorithms = ['insertion_sort', 'quicksort', 'bubble_sort', 'heapsort']
+    algorithms = ['insertion_sort', 'quicksort', 'bubble_sort', 'heapsort', 'counting_sort', 'bucket_sort']
     dateset_size = 10 ** 4
     # Print the header
     stdout.write('Size')
