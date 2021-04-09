@@ -3,6 +3,7 @@ from random import random
 from sys import stdout
 from timeit import timeit
 import sys
+
 sys.path.append('../')
 from Heap.binheap import binheap
 
@@ -73,6 +74,47 @@ def partition(A: List[T], begin: int, end: int, pivot: int, total_order: Optiona
             end -= 1
     A[pivot], A[end] = A[end], A[pivot]
     return end
+
+
+def select_pivot(A: List[T], begin: int, end: int, total_order) -> int:
+    if end - begin < 5:
+        insertion_sort(A, begin=begin, end=end, total_order=total_order)
+
+        return (begin + end) // 2
+
+    c_begin = begin
+    pos = begin
+    while c_begin + 2 < end + 1:
+        insertion_sort(A, begin=c_begin, end=min(end, c_begin + 4), total_order=total_order)
+
+        A[pos], A[c_begin+2] = A[c_begin+2], A[pos]
+
+        pos += 1
+        c_begin += 5
+
+    return select(A, (begin+pos-1)//2, begin=begin, end=pos-1, total_order=total_order)
+
+
+def select(A: List[T], i: int, begin: int = 0, end: Optional[int] = None,
+           total_order: Optional[TOrderType] = min_order) -> int:
+    if end is None:
+        end = len(A) - 1
+
+    if end - begin < 140:
+        insertion_sort(A, begin=begin, end=end, total_order=total_order)
+
+        return i
+
+    pivot = select_pivot(A, begin, end, total_order)
+    pivot = partition(A, begin, end, pivot, total_order=total_order)
+
+    if i == pivot:
+        return i
+
+    if i > pivot:
+        return select(A, i, begin=pivot + 1, end=end, total_order=total_order)
+
+    return select(A, i, begin=begin, end=pivot - 1, total_order=total_order)
 
 
 def quicksort(A: List[T], begin: Optional[int] = 0, end: Optional[int] = None,
