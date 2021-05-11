@@ -66,5 +66,4 @@ if __name__ == '__main__':
     A.show_graph()
     G = dijkstra(A, 0)
     G.show_dijkstra()
-    print(A.get_node(9).dijkstra_pred)
     G.show_path(13)

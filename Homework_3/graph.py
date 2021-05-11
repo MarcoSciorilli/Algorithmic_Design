@@ -15,6 +15,7 @@ class Node:
         self.adjacent_dict = {}
         self.dijkstra_distance = None
         self.dijkstra_pred = None
+        self.importance = None
 
     def __str__(self) -> str:
         return str(self.index) + ' adjacent: ' + str([x.index for x in self.adjacent_dict])
@@ -79,12 +80,16 @@ class Node:
         """
         return self.adjacent_dict[connected_node]
 
-    def set_distance(self, d: bool) -> None:
+    def set_distance(self, d: K) -> None:
         self.dijkstra_distance = d
 
 
-    def set_pred(self, pred: Generic) -> None:
+    def set_pred(self, pred: K) -> None:
         self.dijkstra_pred = pred
+
+
+    def set_importance(self, importance: K) -> None:
+        self.importance = importance
 
 
 
@@ -139,7 +144,7 @@ class Graph:
 
     def get_node(self, index: int) -> Optional[Node]:
         """
-        Function which returns a node in the graph
+        Function which returns a node in the graph.
         Parameters
         ----------
         index: index of the node of interest
@@ -155,7 +160,7 @@ class Graph:
 
     def add_edge(self, start: int, end: int, weight: K = 0) -> None:
         """
-        Function which create an edge between two nodes
+        Function which create an edge between two nodes.
         Parameters
         ----------
         start: index of the starting node
@@ -174,7 +179,7 @@ class Graph:
     def get_nodes(self) -> KeysView:
         """
         Function which return a list of all the nodes in the graph
-        Returns: list of all the nodes in the graph
+        Returns: list of all the nodes in the graph.
         -------
 
         """
@@ -182,30 +187,48 @@ class Graph:
 
     def get_nodes_list(self) -> list:
         """
-        Function which return a list of the index of all the nodes in the graph
-        Returns: list of all the nodes in the graph
+        Function which returns a list of the index of all the nodes in the graph
+        Returns: list of all the nodes in the graph.
         -------
 
         """
         return list(self.graph.keys())
 
-    def get_distance_node(self, index: int):
-        return self.get_node(index).dijkstra_distance
-
     def get_distances(self):
+        """
+        After an application of the Dijkstra algorithm, the function which returns a list of the distances
+        of all nodes from the origin.
+        """
         distances = [self.get_node(v).dijkstra_distance for v in self.graph]
         return distances
 
     def get_pred(self):
+        """
+        Function which return the list of the precedent node for all the nodes in the graph.
+        """
         pred = [self.get_node(v).dijkstra_pred for v in self.graph]
         return pred
 
     def _get_path(self, end):
+        """
+        After an application of the Dijkstra algorithm, the function return the node path from the origin
+        to the node given in input.
+        Parameters
+        ----------
+        end Aimed node
+        -------
+
+        """
         path = [end]
         while end.dijkstra_pred != None:
             path.append(end.dijkstra_pred)
             end = end.dijkstra_pred
         return path
+
+    def remove_node(self, node):
+
+
+
 
 
 
@@ -285,12 +308,16 @@ class Graph:
         formula = starting + nodes + edges + ending
         preview(formula, output='pdf', viewer='file', filename='graph_distances.pdf', euler=False, preamble=preamble)
 
-    def show_path(self, start, end):
+    def show_path(self, end):
         """
-        Renders graph into LaTeX image.
+        Renders in red in the graph the path to a node.
         Parameters
+        ----------
+        end Aimed node
+        -------
 
         """
+
         nodes_list = list(self.graph.keys())
         nodes_number = len(nodes_list)
         vertexes = [(nodes_number * math.cos(2 * math.pi * i / nodes_number),
@@ -309,10 +336,7 @@ class Graph:
         nodes = str()
         for i in nodes_list:
             nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]},L=${self.graph[i].dijkstra_distance}$] { {i} } \n"
-        path = self._get_path(self.get_node(start), self.get_node(end))
-        for i in path:
-            print(i.index)
-        print(path)
+        path = self._get_path(self.get_node(end))
         edges = str()
         for i in nodes_list:
             connections = self.graph[i].get_connections_indexes()
