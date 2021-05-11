@@ -69,12 +69,17 @@ class binheap(Generic[T]):
             for child_idx in [binheap.left(node), binheap.right(node)]:
                 if child_idx < self._size and self._torder(self._A[child_idx], self._A[min_node]):
                     min_node = child_idx
-            # min_node is the index of the minimum key among the keys of root and its childrend
+            # min_node is the index of the minimum key among the keys of root and its children
             if min_node != node:
                 self._swap_keys(min_node, node)
                 node = min_node
             else:
                 keep_fixing = False
+
+    def get_node(self, node: T) -> int:
+        for i in range(len(self._A)):
+            if node == self._A[i]:
+                return i
 
     def remove_minimum(self) -> T:
         if self.is_empty():
@@ -98,7 +103,9 @@ class binheap(Generic[T]):
             raise RuntimeError(f'{new_value} is not smaller than' + f'{self._A[node]}')
 
         self._A[node] = new_value
+        self.decreaser(node)
 
+    def decreaser(self, node: int) -> None:
         parent = binheap.parent(node)
 
         while node != 0 and not self._torder(self._A[parent], self._A[node]):
