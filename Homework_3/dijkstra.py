@@ -22,6 +22,7 @@ T = TypeVar('T')
 def init_sssp(G: Generic) -> None:
     for v in G:
         v.set_distance(math.inf)
+        v.set_pred(None)
 
 
 def update_distance(Q, v, d):
@@ -63,7 +64,10 @@ if __name__ == '__main__':
         A.add_edge(2, i + 2, i * 10)
     for i in range(18):
         A.add_edge(6, i + 2, i * 10)
-    A.show_graph()
-    G = dijkstra(A, 0)
-    G.show_dijkstra()
-    G.show_path(13)
+    A = dijkstra(A, 0)
+    A.plotter("dijkstra")
+    A.remove_node(3)
+    A.plotter("standard", "after2")
+    A = dijkstra(A, 0)
+    A.plotter("path", "final")
+

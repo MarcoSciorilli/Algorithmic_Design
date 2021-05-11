@@ -54,7 +54,7 @@ class Node:
         """
         return [x.index for x in self.adjacent_dict]
 
-    def edge_weight(self, connected_node: Generic) -> bool:
+    def edge_weight(self, connected_node: int) -> bool:
         """
         Function which returns the weight of the edge to a specific node.
         Parameters
@@ -67,18 +67,6 @@ class Node:
         """
         return self.adjacent_dict[connected_node]
 
-    def edge_weight_number(self, connected_node: Generic) -> bool:
-        """
-        Function which returns the weight of the edge to a specific node.
-        Parameters
-        ----------
-        connected_node: the connected node whose edge we are interested in
-
-        Returns: the weight of the edge
-        -------
-
-        """
-        return self.adjacent_dict[connected_node]
 
     def set_distance(self, d: K) -> None:
         self.dijkstra_distance = d
@@ -226,89 +214,93 @@ class Graph:
         return path
 
     def remove_node(self, node):
+        node = self.get_node(node)
+        starting_nodes = [self.get_node(v) for v in self.graph if node in self.get_node(v).adjacent_dict]
+        for n in starting_nodes:  # for all the nodes that points to the one to remove
+            for m in node.adjacent_dict:  # for all the nodes the one to remove points to
+                # if the nodes points at each other, or the
+                # there already is a shorter path, skip the iteration
+                if m == n or (m in n.adjacent_dict) and (n.edge_weight(m) < n.edge_weight(node) + node.edge_weight(m)):
+                    continue
+                else:
+                    self.add_edge(n.index, m.index, n.edge_weight(node) + node.edge_weight(m))
+            del n.adjacent_dict[node]
+        del self.graph[node.index]
 
 
+    def vertex_coord(self, nodes_number):
+        return [(nodes_number * math.cos(2 * math.pi * i / nodes_number),
+                     nodes_number * math.sin(2 * math.pi * i / nodes_number)) for i in range(nodes_number)]
+
+    def plotter(self, mode = "standard", name = "graph"):
+        nodes_list = list(self.graph.keys())
+        nodes_number = len(nodes_list)
+        vertexes = self.vertex_coord(nodes_number)
+        preamble = "\\RequirePackage{luatex85}\n" \
+                   "\\documentclass{article} \n" \
+                   "\\usepackage[paperwidth=5700mm, paperheight=5700mm]{geometry} \n" \
+                   "\\usepackage{tkz-graph}\n" \
+                   "\\begin{document}\n" \
+                   "\\thispagestyle{empty}"
+        starting = "\\begin{figure}\n " \
+                   "\\centering \n" \
+                   "\\resizebox{\\columnwidth}{!}{\n" \
+                   "\\begin{tikzpicture} \n " \
+                   "\\tikzstyle{EdgeStyle}=[pre] \n"
+
+        if mode == "standard":
+            nodes, edges = self.show_graph(nodes_list, vertexes)
+        if mode == "dijkstra":
+            nodes, edges = self.show_dijkstra(nodes_list, vertexes)
+        if mode == "path":
+            end = input("Enter node index you want to reach: ")
+            nodes, edges = self.show_path(nodes_list, vertexes, int(end))
 
 
+        ending ="\\end{tikzpicture}} \n" \
+                "\\end{figure}"
+        formula = starting + nodes + edges + ending
+        preview(formula, output='pdf', viewer='file', filename=f'{name}.pdf', euler=False, preamble=preamble)
 
-
-
-    def show_graph(self):
+    def show_graph(self, nodes_list, vertexes):
         """
         Renders graph into LaTeX image.
         Parameters
 
         """
-        nodes_list = list(self.graph.keys())
-        nodes_number = len(nodes_list)
-        vertexes = [(nodes_number * math.cos(2 * math.pi * i / nodes_number),
-                     nodes_number * math.sin(2 * math.pi * i / nodes_number)) for i in range(nodes_number)]
-        preamble =  "\\RequirePackage{luatex85}\n" \
-                    "\\documentclass{article} \n" \
-                    "\\usepackage[paperwidth=5700mm, paperheight=5700mm]{geometry} \n" \
-                    "\\usepackage{tkz-graph}\n" \
-                    "\\begin{document}\n" \
-                    "\\thispagestyle{empty}"
-        starting =  "\\begin{figure}\n " \
-                    "\\centering \n" \
-                    "\\resizebox{\\columnwidth}{!}{\n" \
-                    "\\begin{tikzpicture} \n " \
-                    "\\tikzstyle{EdgeStyle}=[pre] \n"
         nodes = str()
-        for i in nodes_list:
-            nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]}] { {i} } \n"
         edges = str()
-        for i in nodes_list:
-            connections = self.graph[i].get_connections_indexes()
+        for i in range(len(nodes_list)):
+            nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]}] { {nodes_list[i]} } \n"
+            connections = self.graph[nodes_list[i]].get_connections_indexes()
             for j in connections:
-                if j == i:
-                    edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${self.graph[i].edge_weight(self.graph[connections[j]])}$]({i}) \n"
+                if j == nodes_list[i]:
+                    edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({nodes_list[i]}) \n"
                 else:
-                    edges = edges + f"\\Edge[label=${self.graph[i].edge_weight(self.graph[j])}$]({j})({i}) \n"
-        ending ="\\end{tikzpicture}} \n" \
-                "\\end{figure}"
-        formula = starting + nodes + edges + ending
-        preview(formula, output='pdf', viewer='file', filename='graph.pdf', euler=False, preamble=preamble)
+                    edges = edges + f"\\Edge[label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({j})({nodes_list[i]}) \n"
+        return nodes, edges
 
 
-    def show_dijkstra(self):
+
+    def show_dijkstra(self, nodes_list, vertexes):
         """
         Renders graph into LaTeX image.
         Parameters
 
         """
-        nodes_list = list(self.graph.keys())
-        nodes_number = len(nodes_list)
-        vertexes = [(nodes_number * math.cos(2 * math.pi * i / nodes_number),
-                     nodes_number * math.sin(2 * math.pi * i / nodes_number)) for i in range(nodes_number)]
-        preamble =  "\\RequirePackage{luatex85}\n" \
-                    "\\documentclass{article} \n" \
-                    "\\usepackage[paperwidth=5700mm, paperheight=5700mm]{geometry} \n" \
-                    "\\usepackage{tkz-graph}\n" \
-                    "\\begin{document}\n" \
-                    "\\thispagestyle{empty}"
-        starting =  "\\begin{figure}\n " \
-                    "\\centering \n" \
-                    "\\resizebox{\\columnwidth}{!}{\n" \
-                    "\\begin{tikzpicture} \n " \
-                    "\\tikzstyle{EdgeStyle}=[pre] \n"
         nodes = str()
-        for i in nodes_list:
-            nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]},L=${self.graph[i].dijkstra_distance}$] { {i} } \n"
         edges = str()
-        for i in nodes_list:
-            connections = self.graph[i].get_connections_indexes()
+        for i in range(len(nodes_list)):
+            nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]},L=${self.graph[nodes_list[i]].dijkstra_distance}$] { {nodes_list[i]} } \n"
+            connections = self.graph[nodes_list[i]].get_connections_indexes()
             for j in connections:
-                if j == i:
-                    edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${self.graph[i].edge_weight(self.graph[connections[j]])}$]({i}) \n"
+                if j == nodes_list[i]:
+                    edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({nodes_list[i]}) \n"
                 else:
-                    edges = edges + f"\\Edge[label=${self.graph[i].edge_weight(self.graph[j])}$]({j})({i}) \n"
-        ending ="\\end{tikzpicture}} \n" \
-                "\\end{figure}"
-        formula = starting + nodes + edges + ending
-        preview(formula, output='pdf', viewer='file', filename='graph_distances.pdf', euler=False, preamble=preamble)
+                    edges = edges + f"\\Edge[label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({j})({nodes_list[i]}) \n"
+        return nodes, edges
 
-    def show_path(self, end):
+    def show_path(self, nodes_list, vertexes, end):
         """
         Renders in red in the graph the path to a node.
         Parameters
@@ -317,42 +309,23 @@ class Graph:
         -------
 
         """
-
-        nodes_list = list(self.graph.keys())
-        nodes_number = len(nodes_list)
-        vertexes = [(nodes_number * math.cos(2 * math.pi * i / nodes_number),
-                     nodes_number * math.sin(2 * math.pi * i / nodes_number)) for i in range(nodes_number)]
-        preamble =  "\\RequirePackage{luatex85}\n" \
-                    "\\documentclass{article} \n" \
-                    "\\usepackage[paperwidth=5700mm, paperheight=5700mm]{geometry} \n" \
-                    "\\usepackage{tkz-graph}\n" \
-                    "\\begin{document}\n" \
-                    "\\thispagestyle{empty}"
-        starting =  "\\begin{figure}\n " \
-                    "\\centering \n" \
-                    "\\resizebox{\\columnwidth}{!}{\n" \
-                    "\\begin{tikzpicture} \n " \
-                    "\\tikzstyle{EdgeStyle}=[pre] \n"
         nodes = str()
-        for i in nodes_list:
-            nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]},L=${self.graph[i].dijkstra_distance}$] { {i} } \n"
-        path = self._get_path(self.get_node(end))
         edges = str()
-        for i in nodes_list:
-            connections = self.graph[i].get_connections_indexes()
-            for j in connections:
-                if j == i:
-                    edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${self.graph[i].edge_weight(self.graph[connections[j]])}$]({i}) \n"
+        path = self._get_path(self.get_node(end))  # Collect the path to the node
+        path.reverse()
+        for i in range(len(nodes_list)):  # For all the node in the graph
+            nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]}] { {nodes_list[i]} } \n"  # Add the nodes
+            connections = self.graph[nodes_list[i]].get_connections_indexes()  # For all nodes, make a list of the edges
+            for j in connections:  # For all the ending node of the edges of th node studied at the moment
+                if j == nodes_list[i]:  # If the node end where it starts, make a loop
+                    edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({nodes_list[i]}) \n"
                 else:
-                    if (self.get_node(i) and self.get_node(j)) in path:
-                        edges = edges + f"\\Edge[label=${self.graph[i].edge_weight(self.graph[j])}$, color=red]({j})({i}) \n"
-                        path.remove(self.get_node(j))
+                    if self.get_node(nodes_list[i]) in path and self.get_node(j) in path:  # If the starting and ending node are both in path (they are surely subsiquent)
+                        edges = edges + f"\\Edge[label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$, color=red]({j})({nodes_list[i]}) \n"
+                        path.remove(self.get_node(nodes_list[i]))
                     else:
-                        edges = edges + f"\\Edge[label=${self.graph[i].edge_weight(self.graph[j])}$]({j})({i}) \n"
-        ending ="\\end{tikzpicture}} \n" \
-                "\\end{figure}"
-        formula = starting + nodes + edges + ending
-        preview(formula, output='pdf', viewer='file', filename='graph_path.pdf', euler=False, preamble=preamble)
+                        edges = edges + f"\\Edge[label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({j})({nodes_list[i]}) \n"
+        return nodes, edges
 
 
 
