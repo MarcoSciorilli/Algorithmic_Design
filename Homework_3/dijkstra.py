@@ -15,11 +15,23 @@ def min_import_order(a: Generic, b: Generic) -> bool:
 
 
 def build_queue_dijkstra(G: Generic):
-    Q = binheap(A=[v for v in G], total_order=min_dist_order)
+    i = 0
+    A = []
+    for v in G:
+        A.append(v)
+        v.binheap_index = i
+        i += 1
+    Q = binheap(A=A, total_order=min_dist_order)
     return Q
 
 def build_queue_hierarchies(G: Generic):
-    Q = binheap(A=[v for v in G], total_order=min_import_order)
+    i = 0
+    A = []
+    for v in G:
+        A.append(v)
+        v.binheap_index = i
+        i += 1
+    Q = binheap(A=A, total_order=min_import_order)
     return Q
 
 
@@ -35,9 +47,9 @@ def init_sssp(G: Generic) -> None:
 def update_distance(Q, v, d):
     v.dijkstra_distance = d
     if d < math.inf:
-        Q.decreaser(Q.get_node(v))
+        Q.decreaser(v.binheap_index)
     else:
-        Q._heapify(Q.get_node(v))
+        Q._heapify(v.binheap_index)
 
 
 def relax(Q, u, v, w):
@@ -47,33 +59,74 @@ def relax(Q, u, v, w):
 
 
 def dijkstra(G: Generic, s) -> Generic:
+    A = G.copy()
     init_sssp(A)
-    G.get_node(s).set_distance(0)
-    Q = build_queue_dijkstra(G)
+    A.get_node(s).set_distance(0)
+    Q = build_queue_dijkstra(A)
     while len(Q) != 0:
         u = Q.remove_minimum()
         for v in u.adjacent_dict:
             relax(Q, u, v, u.edge_weight(v))
-    return G
+    return A
 
-def contraction_hierarchies(G: Generic):
-    Q = build_queue_hierarchies(G)
+def dijkstra_higher(G: Generic, s) -> Generic:
+    A = G.copy()
+    init_sssp(A)
+    A.get_node(s).set_distance(0)
+    Q = build_queue_dijkstra(A)
+    while len(Q) != 0:
+        u = Q.remove_minimum()
+        for v in u.adjacent_dict:
+            if v.importance < u.importance:
+                continue
+            else:
+                relax(Q, u, v, u.edge_weight(v))
+    return A
+
+def dijkstra_lower(G: Generic, s) -> Generic:
+    A = G.copy()
+    init_sssp(A)
+    A.get_node(s).set_distance(0)
+    Q = build_queue_dijkstra(A)
+    while len(Q) != 0:
+        u = Q.remove_minimum()
+        for v in u.adjacent_dict:
+            if v.importance > u.importance:
+                continue
+            else:
+                relax(Q, u, v, u.edge_weight(v))
+    return A
+
+def contraction_hierarchies_list(G: Generic):
     B = G.copy()
-    hierarchies =[B]
+    First_element = G.copy()
+    Q = build_queue_hierarchies(First_element)
+    hierarchies =[First_element]
     i = 0
     while len(Q) != 2:
         u = Q.remove_minimum()
         u.hierarchy = i
         i += 1
-        G.remove_node(u.index)
-        B = G.copy()
-        hierarchies.append(B)
+        B.remove_node(u.index)
+        C = B.copy()
+        hierarchies.append(C)
     return hierarchies
 
+def contraction_hierarchies_graph(G: Generic):
+    A = G.copy()
+    hierarchies = contraction_hierarchies_list(A)
+    for i in hierarchies:
+        for j in i:
+            connections = j.get_connections_indexes()
+            for t in connections:
+                if t not in A.get_node(j.index).get_connections_indexes():
+                    A.add_edge(j.index, t, j.edge_weight(i.get_node(t)))
+    return A
 
-def routing(ch: List, s, e):
-    G_up = ch[s.index]
-    G_down
+
+def routing(G, s, e):
+    Start = dijkstra_higher(G, s)
+    Finish = dijkstra_lower(G, e)
 
 
 
@@ -93,9 +146,8 @@ if __name__ == '__main__':
         A.add_edge(2, i + 2, i * 10)
     for i in range(18):
         A.add_edge(6, i + 2, i * 10)
-    C = dijkstra(A, 0)
-    B = contraction_hierarchies(A)
+    F = dijkstra(A, 0)
+    F.plotter("path")
 
-    A.hierarchies_plotter(B)
 
 

@@ -19,6 +19,7 @@ class Node:
         self.dijkstra_pred = None
         self.importance = None
         self.hierarchy = None
+        self.binheap_index = None
 
     def __str__(self) -> str:
         return str(self.index) + ' adjacent: ' + str([x.index for x in self.adjacent_dict])
@@ -239,18 +240,18 @@ class Graph:
         return [(nodes_number * math.cos(2 * math.pi * i / nodes_number),
                      nodes_number * math.sin(2 * math.pi * i / nodes_number)) for i in range(nodes_number)]
 
-    def plotter(self, mode = "standard", name = "graph"):
+    def plotter(self, mode="standard", name="graph"):
         nodes_list = list(self.graph.keys())
         vertexes = self.vertex_coord(len(nodes_list))
         preamble = "\\RequirePackage{luatex85}\n" \
                    "\\documentclass{article} \n" \
-                   "\\usepackage[paperwidth=5700mm, paperheight=5700mm]{geometry} \n" \
+                   "\\usepackage[paperwidth=5700mm, paperheight=5700mm, margin=0mm]{geometry} \n" \
                    "\\usepackage{tkz-graph}\n" \
                    "\\begin{document}\n" \
                    "\\thispagestyle{empty}"
         starting = "\\begin{figure}\n " \
                    "\\centering \n" \
-                   "\\resizebox{\\columnwidth}{!}{\n" \
+                   "\\resizebox{4000mm}{!}{\n" \
                    "\\begin{tikzpicture} \n " \
                    "\\tikzstyle{EdgeStyle}=[pre] \n"
 
@@ -339,23 +340,24 @@ class Graph:
         nodes_number = len(keys)
         for i in range(len(list_hierarchies[0].graph)):
             vertexes[keys[i]] = (nodes_number * math.cos(2 * math.pi * i / nodes_number), nodes_number * math.sin(2 * math.pi * i / nodes_number))
-        counter = 0
         preamble = "\\RequirePackage{luatex85}\n" \
                    "\\documentclass{article} \n" \
-                   "\\usepackage[paperwidth=4000mm, paperheight=4000mm]{geometry} \n" \
+                   "\\usepackage[paperwidth=3000mm, paperheight=3000mm,margin=0mm]{geometry} \n" \
                    "\\usepackage{tkz-graph}\n" \
-                   "\\begin{document}\n" \
-                   "\\thispagestyle{empty}"
+                   "\\begin{document}\n"
+
         starting = "\\begin{figure}\n " \
                    "\\centering \n" \
-                   "\\resizebox{3000mm}{!}{\n" \
+                   "\\resizebox{!} {2800mm} { \n" \
                    "\\begin{tikzpicture} \n " \
                    "\\tikzstyle{EdgeStyle}=[pre] \n"
 
         ending = "\\end{tikzpicture}} \n" \
-                 "\\end{figure}"
-
+                 "\\end{figure} \n" \
+                "\\newpage \n"
+        text = str()
         for g in list_hierarchies:
+            text = text + starting
             nodes_list = list(g.graph.keys())
             nodes = str()
             edges = str()
@@ -367,11 +369,12 @@ class Graph:
                         edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${g.graph[i].edge_weight(g.graph[j])}$]({i}) \n"
                     else:
                         edges = edges + f"\\Edge[label=${g.graph[i].edge_weight(g.graph[j])}$]({j})({i}) \n"
+            for l in keys:
+                if l not in nodes_list:
+                    nodes = nodes + f"\\Vertex[empty, x={vertexes[l][0]},y={vertexes[l][1]}] { {l} }\n"
+            text = text + nodes + edges + ending
 
-
-            formula = starting + nodes + edges + ending
-            preview(formula, output='pdf', viewer='file', filename=f'contraction_hierarchies{counter}.pdf', euler=False, preamble=preamble)
-            counter += 1
+        preview(text, output='pdf', filename=f'contraction_hierarchies.pdf', euler=False, preamble=preamble)
 
 
 

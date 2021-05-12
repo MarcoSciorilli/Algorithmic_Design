@@ -29,6 +29,7 @@ class binheap(Generic[T]):
         else:
             self._size = len(A)
             self._A = A
+            self._B = [i for i in range(self._size)]
 
         self._build_heap()
 
@@ -61,6 +62,9 @@ class binheap(Generic[T]):
         tmp = self._A[node_a]
         self._A[node_a] = self._A[node_b]
         self._A[node_b] = tmp
+        tmp = self._B[node_a]
+        self._B[node_a] = self._B[node_b]
+        self._B[node_b] = tmp
 
     def _heapify(self, node: int) -> None:
         keep_fixing = True
