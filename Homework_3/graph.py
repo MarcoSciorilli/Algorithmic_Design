@@ -1,6 +1,8 @@
 from typing import TypeVar, KeysView, Optional, List, Generic
+import copy
 from sympy import *
 import math
+
 
 K = TypeVar('K')
 
@@ -16,6 +18,7 @@ class Node:
         self.dijkstra_distance = None
         self.dijkstra_pred = None
         self.importance = None
+        self.hierarchy = None
 
     def __str__(self) -> str:
         return str(self.index) + ' adjacent: ' + str([x.index for x in self.adjacent_dict])
@@ -91,6 +94,7 @@ class Graph:
 
     def __iter__(self):
         return iter(self.graph.values())
+
 
     def put_node(self, starting_edges: List[Tuple], ending_edges: List[Tuple]) -> None:
         """
@@ -213,6 +217,9 @@ class Graph:
             end = end.dijkstra_pred
         return path
 
+    def copy(self):
+        return copy.deepcopy(self)
+
     def remove_node(self, node):
         node = self.get_node(node)
         starting_nodes = [self.get_node(v) for v in self.graph if node in self.get_node(v).adjacent_dict]
@@ -234,8 +241,7 @@ class Graph:
 
     def plotter(self, mode = "standard", name = "graph"):
         nodes_list = list(self.graph.keys())
-        nodes_number = len(nodes_list)
-        vertexes = self.vertex_coord(nodes_number)
+        vertexes = self.vertex_coord(len(nodes_list))
         preamble = "\\RequirePackage{luatex85}\n" \
                    "\\documentclass{article} \n" \
                    "\\usepackage[paperwidth=5700mm, paperheight=5700mm]{geometry} \n" \
@@ -327,6 +333,45 @@ class Graph:
                         edges = edges + f"\\Edge[label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({j})({nodes_list[i]}) \n"
         return nodes, edges
 
+    def hierarchies_plotter(self, list_hierarchies):
+        vertexes = {}
+        keys = list(list_hierarchies[0].graph.keys())
+        nodes_number = len(keys)
+        for i in range(len(list_hierarchies[0].graph)):
+            vertexes[keys[i]] = (nodes_number * math.cos(2 * math.pi * i / nodes_number), nodes_number * math.sin(2 * math.pi * i / nodes_number))
+        counter = 0
+        preamble = "\\RequirePackage{luatex85}\n" \
+                   "\\documentclass{article} \n" \
+                   "\\usepackage[paperwidth=4000mm, paperheight=4000mm]{geometry} \n" \
+                   "\\usepackage{tkz-graph}\n" \
+                   "\\begin{document}\n" \
+                   "\\thispagestyle{empty}"
+        starting = "\\begin{figure}\n " \
+                   "\\centering \n" \
+                   "\\resizebox{3000mm}{!}{\n" \
+                   "\\begin{tikzpicture} \n " \
+                   "\\tikzstyle{EdgeStyle}=[pre] \n"
+
+        ending = "\\end{tikzpicture}} \n" \
+                 "\\end{figure}"
+
+        for g in list_hierarchies:
+            nodes_list = list(g.graph.keys())
+            nodes = str()
+            edges = str()
+            for i in nodes_list:
+                nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]}] { { i } }\n"
+                connections = g.graph[i].get_connections_indexes()
+                for j in connections:
+                    if j == i:
+                        edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${g.graph[i].edge_weight(g.graph[j])}$]({i}) \n"
+                    else:
+                        edges = edges + f"\\Edge[label=${g.graph[i].edge_weight(g.graph[j])}$]({j})({i}) \n"
+
+
+            formula = starting + nodes + edges + ending
+            preview(formula, output='pdf', viewer='file', filename=f'contraction_hierarchies{counter}.pdf', euler=False, preamble=preamble)
+            counter += 1
 
 
 

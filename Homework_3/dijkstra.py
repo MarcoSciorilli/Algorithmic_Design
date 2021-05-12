@@ -10,9 +10,16 @@ from Heap.binheap import binheap
 def min_dist_order(a: Generic, b: Generic) -> bool:
     return a.dijkstra_distance <= b.dijkstra_distance
 
+def min_import_order(a: Generic, b: Generic) -> bool:
+    return a.importance <= b.importance
 
-def build_queue(G: Generic):
+
+def build_queue_dijkstra(G: Generic):
     Q = binheap(A=[v for v in G], total_order=min_dist_order)
+    return Q
+
+def build_queue_hierarchies(G: Generic):
+    Q = binheap(A=[v for v in G], total_order=min_import_order)
     return Q
 
 
@@ -42,20 +49,42 @@ def relax(Q, u, v, w):
 def dijkstra(G: Generic, s) -> Generic:
     init_sssp(A)
     G.get_node(s).set_distance(0)
-    Q = build_queue(G)
+    Q = build_queue_dijkstra(G)
     while len(Q) != 0:
         u = Q.remove_minimum()
         for v in u.adjacent_dict:
             relax(Q, u, v, u.edge_weight(v))
     return G
 
+def contraction_hierarchies(G: Generic):
+    Q = build_queue_hierarchies(G)
+    B = G.copy()
+    hierarchies =[B]
+    i = 0
+    while len(Q) != 2:
+        u = Q.remove_minimum()
+        u.hierarchy = i
+        i += 1
+        G.remove_node(u.index)
+        B = G.copy()
+        hierarchies.append(B)
+    return hierarchies
+
+
+def routing(ch: List, s, e):
+    G_up = ch[s.index]
+    G_down
+
+
 
 if __name__ == '__main__':
     from graph import *
+    from random import random
 
     A = Graph()
     for i in range(20):
         A.add_node(i)
+        A.get_node(i).importance = random()
     for i in range(19):
         A.add_edge(i, i + 1, i * 10)
     for i in range(18):
@@ -64,10 +93,9 @@ if __name__ == '__main__':
         A.add_edge(2, i + 2, i * 10)
     for i in range(18):
         A.add_edge(6, i + 2, i * 10)
-    A = dijkstra(A, 0)
-    A.plotter("dijkstra")
-    A.remove_node(3)
-    A.plotter("standard", "after2")
-    A = dijkstra(A, 0)
-    A.plotter("path", "final")
+    C = dijkstra(A, 0)
+    B = contraction_hierarchies(A)
+
+    A.hierarchies_plotter(B)
+
 
