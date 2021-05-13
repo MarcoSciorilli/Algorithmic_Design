@@ -81,13 +81,6 @@ class binheap(Generic[T]):
             else:
                 keep_fixing = False
 
-    def get_node(self, node: T) -> int:
-        for i in range(len(self._A)):
-            if self._A[i] == node:
-                return i
-            else:
-                continue
-
     def remove_minimum(self) -> T:
         if self.is_empty():
             raise RuntimeError('The heap is empty')

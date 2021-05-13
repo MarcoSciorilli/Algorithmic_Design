@@ -235,12 +235,29 @@ class Graph:
             del n.adjacent_dict[node]
         del self.graph[node.index]
 
+    def just_node(self, index):
+        node = self.get_node(index)
+        to_erase = []
+        # Get all the node to pop
+        for i in self.graph:
+            if (self.get_node(i) != node) and (self.get_node(i) not in node.adjacent_dict) and (node not in self.get_node(i).adjacent_dict):
+                to_erase.append(i)
+        # Pop all the useless edges
+        for i in self.graph:
+            edge_to_erase = []
+            for j in self.get_node(i).adjacent_dict:
+                if j.index in to_erase:
+                    edge_to_erase.append(j.index)
+            for j in edge_to_erase:
+                self.get_node(i).adjacent_dict.pop(self.get_node(j), None)
+        for i in to_erase:
+            self.graph.pop(i, None)
 
     def vertex_coord(self, nodes_number):
         return [(nodes_number * math.cos(2 * math.pi * i / nodes_number),
                      nodes_number * math.sin(2 * math.pi * i / nodes_number)) for i in range(nodes_number)]
 
-    def plotter(self, mode="standard", name="graph"):
+    def plotter(self, mode="standard", name="graph", display='file'):
         nodes_list = list(self.graph.keys())
         vertexes = self.vertex_coord(len(nodes_list))
         preamble = "\\RequirePackage{luatex85}\n" \
@@ -259,6 +276,8 @@ class Graph:
             nodes, edges = self.show_graph(nodes_list, vertexes)
         if mode == "dijkstra":
             nodes, edges = self.show_dijkstra(nodes_list, vertexes)
+        if mode == "importance":
+            nodes, edges = self.show_importance(nodes_list, vertexes)
         if mode == "path":
             end = input("Enter node index you want to reach: ")
             nodes, edges = self.show_path(nodes_list, vertexes, int(end))
@@ -267,7 +286,7 @@ class Graph:
         ending ="\\end{tikzpicture}} \n" \
                 "\\end{figure}"
         formula = starting + nodes + edges + ending
-        preview(formula, output='pdf', viewer='file', filename=f'{name}.pdf', euler=False, preamble=preamble)
+        preview(formula, output='pdf', viewer=display, filename=f'{name}.pdf', euler=False, preamble=preamble)
 
     def show_graph(self, nodes_list, vertexes):
         """
@@ -334,47 +353,23 @@ class Graph:
                         edges = edges + f"\\Edge[label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({j})({nodes_list[i]}) \n"
         return nodes, edges
 
-    def hierarchies_plotter(self, list_hierarchies):
-        vertexes = {}
-        keys = list(list_hierarchies[0].graph.keys())
-        nodes_number = len(keys)
-        for i in range(len(list_hierarchies[0].graph)):
-            vertexes[keys[i]] = (nodes_number * math.cos(2 * math.pi * i / nodes_number), nodes_number * math.sin(2 * math.pi * i / nodes_number))
-        preamble = "\\RequirePackage{luatex85}\n" \
-                   "\\documentclass{article} \n" \
-                   "\\usepackage[paperwidth=3000mm, paperheight=3000mm,margin=0mm]{geometry} \n" \
-                   "\\usepackage{tkz-graph}\n" \
-                   "\\begin{document}\n"
+    def show_importance(self, nodes_list, vertexes):
+        """
+        Renders graph into LaTeX image.
+        Parameters
 
-        starting = "\\begin{figure}\n " \
-                   "\\centering \n" \
-                   "\\resizebox{!} {2800mm} { \n" \
-                   "\\begin{tikzpicture} \n " \
-                   "\\tikzstyle{EdgeStyle}=[pre] \n"
-
-        ending = "\\end{tikzpicture}} \n" \
-                 "\\end{figure} \n" \
-                "\\newpage \n"
-        text = str()
-        for g in list_hierarchies:
-            text = text + starting
-            nodes_list = list(g.graph.keys())
-            nodes = str()
-            edges = str()
-            for i in nodes_list:
-                nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]}] { { i } }\n"
-                connections = g.graph[i].get_connections_indexes()
-                for j in connections:
-                    if j == i:
-                        edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${g.graph[i].edge_weight(g.graph[j])}$]({i}) \n"
-                    else:
-                        edges = edges + f"\\Edge[label=${g.graph[i].edge_weight(g.graph[j])}$]({j})({i}) \n"
-            for l in keys:
-                if l not in nodes_list:
-                    nodes = nodes + f"\\Vertex[empty, x={vertexes[l][0]},y={vertexes[l][1]}] { {l} }\n"
-            text = text + nodes + edges + ending
-
-        preview(text, output='pdf', filename=f'contraction_hierarchies.pdf', euler=False, preamble=preamble)
+        """
+        nodes = str()
+        edges = str()
+        for i in range(len(nodes_list)):
+            nodes = nodes + f"\\Vertex[x={vertexes[i][0]},y={vertexes[i][1]},L=${self.graph[nodes_list[i]].importance}$] { {nodes_list[i]} } \n"
+            connections = self.graph[nodes_list[i]].get_connections_indexes()
+            for j in connections:
+                if j == nodes_list[i]:
+                    edges = edges + f"\\Loop[dir=NO,dist=2cm,label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({nodes_list[i]}) \n"
+                else:
+                    edges = edges + f"\\Edge[label=${self.graph[nodes_list[i]].edge_weight(self.graph[j])}$]({j})({nodes_list[i]}) \n"
+        return nodes, edges
 
 
 
