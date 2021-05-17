@@ -40,7 +40,8 @@ def min_import_order(a: K, b: K) -> bool:
 def build_queue_dijkstra(G: Graph) -> binheap:
     """
     Function that build a binheap queue of a graph given in input, using the dijstra distance attribute as the metric
-    to define the order relation
+    to define the order relation. A minor addiction to the binheap class has been added to track the key-switches in
+    the binary heap, without changing the asymptotic complexity of any of the related algorithms.
 
     Parameters
     ----------
@@ -63,7 +64,8 @@ def build_queue_dijkstra(G: Graph) -> binheap:
 def build_queue_hierarchies(G: Graph) -> binheap:
     """
     Function that build a binheap queue of a graph given in input, using the importance attribute as the metric
-    to define the order relation
+    to define the order relation.  A minor addiction to the binheap class has been added to track the key-switches in
+    the binary heap, without changing the asymptotic complexity of any of the related algorithms.
 
     Parameters
     ----------
@@ -130,8 +132,6 @@ def relax(Q: binheap, u: Node, v: Node, w: K) -> None:
     u Predecent node
     v Node to update
     w New weight of the edge
-
-    Returns
     -------
 
     """
