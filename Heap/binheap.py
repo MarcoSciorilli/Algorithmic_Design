@@ -1,5 +1,6 @@
 from numbers import Number
 from typing import TypeVar, Generic, List, Union
+
 T = TypeVar('T')
 
 
@@ -9,8 +10,6 @@ def min_order(a: Number, b: Number) -> bool:
 
 def max_order(a: Number, b: Number) -> bool:
     return a >= b
-
-
 
 
 class binheap(Generic[T]):
@@ -129,7 +128,7 @@ class binheap(Generic[T]):
             else:
                 self._A[self._size] = self._A[parent]
                 self._size += 1
-                self.decrease_key(self._size-1, value)
+                self.decrease_key(self._size - 1, value)
 
     def __repr__(self) -> str:
         bh_str = ''
@@ -149,4 +148,3 @@ class binheap(Generic[T]):
             up_to = 2 * up_to
 
         return bh_str
-
